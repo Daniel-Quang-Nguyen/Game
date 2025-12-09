@@ -226,7 +226,8 @@ SENTENCE_DB = [
     {"ipa": "/ðæts ə 'ne.sə.sə.ri 'sæ.krɪ.faɪs/", "text": "Thats a necessary sacrifice"},
     {"ipa": "/ʃi ɪz ə 'se.krə.tri/", "text": "She is a secretary"},
     {"ipa": "/ðə 'vju: wɒz ɪk'strɔ:.də.nə.ri/", "text": "The view was extraordinary"},
-    {"ipa": "/hi ɪz ə 'le.dʒən.də.ri 'hɪə.rəʊ/", "text": "He is a legendary hero"}
+    {"ipa": "/hi ɪz ə 'le.dʒən.də.ri 'hɪə.rəʊ/", "text": "He is a legendary hero"},
+    {"ipa": "/pli:z aɪ'den.tɪ.faɪ jɔ: 'self/", "text": "Please identify yourself"}
 ]
 
 # ==========================================
