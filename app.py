@@ -4,108 +4,95 @@ import time
 import pandas as pd
 import requests
 
-# --- XỬ LÝ LỖI THƯ VIỆN & SETUP ---
+# --- SETUP CƠ BẢN ---
 try:
     from streamlit_lottie import st_lottie
     LOTTIE_AVAILABLE = True
 except ImportError:
     LOTTIE_AVAILABLE = False
 
-st.set_page_config(page_title="CYBER STRESS // OMEGA", page_icon="💠", layout="wide")
+st.set_page_config(page_title="CYBER STRESS: OVERDRIVE", page_icon="☣️", layout="wide")
 
-# --- ASSETS LOADING ---
-def load_lottieurl(url: str):
-    try:
-        r = requests.get(url)
-        if r.status_code != 200: return None
-        return r.json()
-    except: return None
-
-# Robot mới (Giao diện AI Assistant - Cyberpunk)
-lottie_url = "https://lottie.host/6a56e300-47a3-4a1c-99c5-6809e5192102/1sZ8ilG7hS.json" # Robot xịn hơn
-lottie_robot = load_lottieurl(lottie_url) if LOTTIE_AVAILABLE else None
-
-# --- CSS CAO CẤP (FULL SCREEN DASHBOARD) ---
+# --- CSS: GLITCH EFFECT & BLUR (Dành cho Robot phá đám) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap');
 
-    /* 1. BACKGROUND & LAYOUT */
+    /* 1. NỀN & FONT */
     .stApp {
-        background-color: #050505;
-        background-image: 
-            linear-gradient(rgba(0, 255, 194, 0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 255, 194, 0.05) 1px, transparent 1px);
-        background-size: 40px 40px;
+        background-color: #02040a;
+        background-image: radial-gradient(circle at 50% 50%, #0a1128 0%, #000000 100%);
         color: #00eaff;
         font-family: 'Share Tech Mono', monospace;
     }
 
-    /* 2. PANEL BOXES (Tạo khung cho từng khu vực) */
-    .css-1r6slb0, .css-keje6w { /* Streamlit Column styling hack */
-        background: rgba(10, 20, 30, 0.6);
-        border: 1px solid #1f2937;
-        padding: 15px;
-        border-radius: 8px;
+    /* 2. HIỆU ỨNG ROBOT PHÁ ĐÁM (GLITCH) */
+    @keyframes glitch-anim {
+        0% { transform: translate(0) }
+        20% { transform: translate(-2px, 2px) }
+        40% { transform: translate(-2px, -2px) }
+        60% { transform: translate(2px, 2px) }
+        80% { transform: translate(2px, -2px) }
+        100% { transform: translate(0) }
     }
-
-    /* 3. NEON TEXT & HEADERS */
-    h1, h2, h3 {
-        font-family: 'Rajdhani', sans-serif;
-        text-transform: uppercase;
-        color: #fff;
-        text-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
+    .glitch-mode {
+        animation: glitch-anim 0.3s infinite;
+        filter: blur(1px);
+        color: #ff0055 !important;
+        border-color: #ff0055 !important;
     }
     
-    /* 4. GLOWING BUTTONS */
+    /* 3. HIỆU ỨNG ROBOT GIÚP ĐỠ (HINT) */
+    .hint-box {
+        border: 1px dashed #00ff00;
+        background: rgba(0, 255, 0, 0.1);
+        color: #00ff00;
+        padding: 10px;
+        text-align: center;
+        animation: float 2s infinite;
+    }
+
+    /* 4. THANH ARMOR (SHIELD) */
+    .armor-bar {
+        height: 10px;
+        background-color: #333;
+        border-radius: 5px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+    .armor-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #00eaff, #0055ff);
+        transition: width 0.5s linear;
+    }
+
+    /* 5. GIAO DIỆN CHÍNH */
+    .hud-display {
+        background: rgba(10, 20, 30, 0.8);
+        border: 2px solid #0055ff;
+        box-shadow: 0 0 15px rgba(0, 85, 255, 0.2);
+        padding: 30px;
+        text-align: center;
+        border-radius: 10px;
+    }
     .stButton>button {
-        background: #0a0a0a;
+        background: #050a14;
         border: 1px solid #00eaff;
         color: #00eaff;
         font-family: 'Rajdhani', sans-serif;
-        font-size: 20px;
-        font-weight: bold;
-        transition: 0.3s;
-        height: 60px;
-        width: 100%;
+        font-size: 18px;
+        height: 55px;
+        transition: 0.2s;
     }
     .stButton>button:hover {
         background: #00eaff;
         color: #000;
-        box-shadow: 0 0 25px #00eaff;
-        transform: scale(1.02);
-    }
-
-    /* 5. HUD DISPLAY (Khung từ vựng) */
-    .hud-display {
-        background: rgba(0,0,0,0.8);
-        border: 2px solid #ff0055; /* Red border for enemy/target */
-        box-shadow: 0 0 20px rgba(255, 0, 85, 0.2);
-        padding: 30px;
-        text-align: center;
-        margin-bottom: 20px;
-        border-radius: 10px;
-        position: relative;
-    }
-    .hud-word {
-        font-size: 55px;
-        color: #fff;
-        font-weight: 700;
-        letter-spacing: 3px;
-    }
-    
-    /* 6. INPUT FIELD */
-    .stTextInput input {
-        background: #000;
-        border: 1px solid #00eaff;
-        color: #00eaff;
-        text-align: center;
-        font-size: 20px;
+        box-shadow: 0 0 20px #00eaff;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- DATABASE (Đã gộp đầy đủ) ---
+# --- DỮ LIỆU TỪ VỰNG ---
 word_data = {
     # Image 1 (-ary)
     "Infirmary": [2, "/ɪn'fɜ:.mə.ri/"], "Itinerary": [2, "/aɪ'tɪ.nə.rə.ri/"], "Luminary": [1, "/'lu:.mɪ.mə.ri/"],
@@ -154,75 +141,75 @@ sentence_data = [
 # --- STATE MANAGEMENT ---
 if 'user_db' not in st.session_state: st.session_state.user_db = {}
 if 'page' not in st.session_state: st.session_state.page = 'welcome'
-if 'current_user' not in st.session_state: st.session_state.current_user = ""
-if 'game_mode' not in st.session_state: st.session_state.game_mode = None
 if 'score' not in st.session_state: st.session_state.score = 0
-if 'q_index' not in st.session_state: st.session_state.q_index = 0
 if 'start_time' not in st.session_state: st.session_state.start_time = 0
-if 'shuffled_keys' not in st.session_state: st.session_state.shuffled_keys = []
-if 'message' not in st.session_state: st.session_state.message = ""
+if 'glitch_active' not in st.session_state: st.session_state.glitch_active = False
 
-# --- LOGIC CỐT LÕI (FIX BUG TRÙNG ĐÁP ÁN) ---
-def generate_robust_distractors(correct_ipa):
-    """
-    Tạo ra 4 đáp án KHÁC NHAU hoàn toàn.
-    """
-    options = set()
-    options.add(correct_ipa)
+# --- LOGIC THÔNG MINH (MODE 2 STRATEGY) ---
+def strategic_distractors(correct_ipa):
+    """Tạo đáp án nhiễu dựa trên lỗi sai phát âm thực tế."""
+    distractors = set()
+    distractors.add(correct_ipa)
     
-    # Danh sách các thao tác làm sai
-    def mutate(ipa):
-        # 1. Bỏ dấu trọng âm
-        if "'" in ipa: return ipa.replace("'", "")
-        # 2. Dịch chuyển dấu trọng âm
-        if "'" in ipa: 
+    # 1. CHIẾN THUẬT: Vowel Confusion (Nhầm lẫn nguyên âm)
+    # Thay thế các nguyên âm na ná nhau
+    vowel_map = {
+        "eɪ": "e",  # /ei/ -> /e/ (make -> mek)
+        "aɪ": "i",  # /ai/ -> /i/ (like -> lick)
+        "i:": "ɪ",  # /i:/ -> /i/ (heat -> hit)
+        "æ": "e",   # /ae/ -> /e/ (man -> men)
+        "ə": "ʌ",   # schwa -> /u/
+        "oʊ": "ɒ"   # /ou/ -> /o/
+    }
+    
+    # 2. CHIẾN THUẬT: Stress Shift (Dịch chuyển trọng âm)
+    # Đây là lỗi phổ biến nhất
+    def shift_stress(ipa):
+        if "'" in ipa:
             clean = ipa.replace("'", "")
-            pos = random.randint(1, len(clean)-2)
-            return clean[:pos] + "'" + clean[pos:]
-        # 3. Đổi nguyên âm
-        replacements = [("e", "ə"), ("i", "ai"), ("æ", "a:"), ("ou", "o"), ("ɪ", "e")]
-        for old, new in replacements:
-            if old in ipa: return ipa.replace(old, new, 1)
-        # 4. Đổi phụ âm đuôi
-        if ipa.endswith("/"): return ipa[:-2] + "s/"
-        return ipa + ":"
+            # Tìm vị trí nguyên âm để đặt dấu trọng âm sai
+            vowels = [i for i, char in enumerate(clean) if char in "aeiouəʌɒɔɪʊ"]
+            if len(vowels) > 1:
+                # Chọn random một vị trí nguyên âm khác
+                idx = random.choice(vowels)
+                return clean[:idx] + "'" + clean[idx:]
+        return ipa
 
+    # Tạo 3 đáp án sai
     attempts = 0
-    while len(options) < 4 and attempts < 20:
-        fake = mutate(correct_ipa)
-        # Randomize thêm nếu vẫn trùng
-        if fake in options:
-            fake = fake.replace("/", "") + ":" + "/" 
-        options.add(fake)
-        attempts += 1
-    
-    # Nếu vẫn không đủ 4 (do từ quá ngắn), thêm đại ký tự
-    final_list = list(options)
-    while len(final_list) < 4:
-        final_list.append(f"/{'x'*len(final_list)}/")
+    while len(distractors) < 4 and attempts < 30:
+        fake = correct_ipa
+        strategy = random.choice(["vowel", "stress", "consonant"])
         
-    random.shuffle(final_list)
-    return final_list
+        if strategy == "vowel":
+            for k, v in vowel_map.items():
+                if k in fake:
+                    fake = fake.replace(k, v, 1)
+                    break
+        elif strategy == "stress":
+            fake = shift_stress(fake)
+        elif strategy == "consonant":
+            # Thay đổi phụ âm cuối s/z, t/d
+            if "s" in fake: fake = fake.replace("s", "z")
+            elif "z" in fake: fake = fake.replace("z", "s")
+            elif "t" in fake: fake = fake.replace("t", "d")
+        
+        # Nếu fake giống hệt cái đúng (do không tìm thấy gì để thay), thêm dấu :
+        if fake == correct_ipa:
+            fake = fake.replace("/", "") + ":/"
 
-# --- CÁC HÀM HỖ TRỢ KHÁC ---
-def get_user_progress(username):
-    if username not in st.session_state.user_db:
-        st.session_state.user_db[username] = {'M1': None, 'M2': None, 'M3': None}
-    return st.session_state.user_db[username]
+        distractors.add(fake)
+        attempts += 1
+        
+    return list(distractors)
 
-def save_score(username, mode, score):
-    st.session_state.user_db[username][f'M{mode}'] = score
+def load_lottieurl(url):
+    try:
+        r = requests.get(url)
+        return r.json() if r.status_code == 200 else None
+    except: return None
 
-def calculate_leaderboard():
-    data = []
-    for user, scores in st.session_state.user_db.items():
-        s1 = scores['M1'] if scores['M1'] is not None else 0
-        s2 = scores['M2'] if scores['M2'] is not None else 0
-        s3 = scores['M3'] if scores['M3'] is not None else 0
-        data.append({"AGENT": user, "STRESS": s1, "IPA": s2, "DECODE": s3, "TOTAL": s1+s2+s3})
-    df = pd.DataFrame(data)
-    if not df.empty: df = df.sort_values(by="TOTAL", ascending=False)
-    return df
+lottie_robot = load_lottieurl("https://lottie.host/6a56e300-47a3-4a1c-99c5-6809e5192102/1sZ8ilG7hS.json")
 
 def start_game(mode):
     st.session_state.game_mode = mode
@@ -230,188 +217,161 @@ def start_game(mode):
     st.session_state.q_index = 0
     st.session_state.page = 'playing'
     st.session_state.message = ""
+    st.session_state.glitch_active = False
     
     if mode == 3:
-        indices = list(range(len(sentence_data)))
-        random.shuffle(indices)
-        st.session_state.shuffled_keys = indices
+        idx = list(range(len(sentence_data)))
+        random.shuffle(idx)
+        st.session_state.shuffled_keys = idx
     else:
         keys = list(word_data.keys())
         random.shuffle(keys)
         st.session_state.shuffled_keys = keys
     st.session_state.start_time = time.time()
 
-def process_answer(is_correct, correct_val):
+def process_answer(is_correct, correct_val, armor_val):
     elapsed = time.time() - st.session_state.start_time
-    pts = max(10, 100 - int(elapsed * 2)) if is_correct else 0
     
+    # ROBOT PHẢN ỨNG: Nếu trả lời quá nhanh (< 2s) -> Kích hoạt Glitch
+    st.session_state.glitch_active = True if elapsed < 2.0 else False
+
+    base_points = 100
     if is_correct:
-        st.session_state.score += pts
-        st.session_state.message = f"✅ TARGET HIT! +{pts} PTS"
+        # Nếu Armor còn > 50% -> Nhân đôi điểm
+        multiplier = 2 if armor_val > 50 else 1
+        points = base_points * multiplier
+        st.session_state.score += points
+        msg = f"✅ CRITICAL HIT! +{points} PTS" if multiplier > 1 else f"✅ TARGET HIT! +{points} PTS"
+        st.session_state.message = msg
     else:
-        st.session_state.message = f"❌ MISS! ANS: {correct_val}"
+        st.session_state.message = f"❌ SYSTEM FAIL! ANS: {correct_val}"
     
-    time.sleep(0.8)
+    time.sleep(1)
     st.session_state.q_index += 1
     st.session_state.start_time = time.time()
-    st.session_state.current_options = [] # Reset options cho Mode 2
+    st.session_state.current_options = [] 
+    st.rerun()
 
-# --- GIAO DIỆN CHÍNH (THE COCKPIT) ---
+# --- GIAO DIỆN ---
+left, mid, right = st.columns([1, 2, 1])
 
-# HEADER
-st.markdown("<h1>💠 CYBER STRESS // <span style='color:#ff0055'>OMEGA SYSTEM</span></h1>", unsafe_allow_html=True)
-
-# LAYOUT 3 CỘT (ĐỂ LẤP ĐẦY MÀN HÌNH)
-left_col, center_col, right_col = st.columns([1, 2, 1])
-
-# --- 1. LEFT COLUMN: AI ASSISTANT ---
-with left_col:
-    st.markdown("### 🤖 AI CORE")
+# --- CỘT TRÁI: AI & ARMOR ---
+with left:
+    st.markdown("### 🤖 AI SECURITY")
     if LOTTIE_AVAILABLE and lottie_robot:
-        st_lottie(lottie_robot, height=200, key="robot_main")
-    else:
-        st.info("VISUAL CORE LOADING...")
+        st_lottie(lottie_robot, height=180, key="bot")
     
     if st.session_state.page == 'playing':
-        st.markdown("---")
-        st.metric("SCORE", st.session_state.score)
-        st.metric("LEVEL", f"{st.session_state.q_index + 1}/10")
-        # Thanh máu ảo
-        hp = max(0, 100 - (st.session_state.q_index * 10))
-        st.write(f"ARMOR: {hp}%")
-        st.progress(hp/100)
-
-# --- 2. CENTER COLUMN: BATTLEFIELD ---
-with center_col:
-    if st.session_state.page == 'welcome':
-        st.markdown("### >> IDENTIFICATION REQUIRED")
-        username = st.text_input("ENTER CODENAME:", placeholder="AGENT_NAME...")
+        # Tính toán Armor (Shield) dựa trên thời gian
+        # Giả sử mỗi câu có 15 giây để suy nghĩ. Armor giảm dần về 0.
+        elapsed = time.time() - st.session_state.start_time
+        max_time = 15.0 
+        armor_pct = max(0, int(100 - (elapsed / max_time * 100)))
         
-        if username:
-            st.session_state.current_user = username
-            progress = get_user_progress(username)
-            st.success(f"ACCESS GRANTED: {username}")
-            st.markdown("---")
-            
+        st.markdown(f"**🛡️ SHIELD INTEGRITY: {armor_pct}%**")
+        
+        # Thanh Armor đổi màu
+        color = "#00eaff" if armor_pct > 50 else "#ff0055"
+        st.markdown(f"""
+        <div class="armor-bar">
+            <div class="armor-fill" style="width:{armor_pct}%; background:{color};"></div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.caption("WARNING: SHIELD < 50% = NO CRIT BONUS")
+        
+        # ROBOT HINT (Nếu suy nghĩ quá lâu > 8s)
+        if elapsed > 8:
+            st.markdown(f"<div class='hint-box'>⚠️ AI HINT: DETECTED LATENCY.<br>STAY FOCUSED AGENT!</div>", unsafe_allow_html=True)
+
+# --- CỘT GIỮA: CHIẾN TRƯỜNG ---
+with mid:
+    st.markdown("<h1 style='text-align:center'>CYBER STRESS</h1>", unsafe_allow_html=True)
+    
+    if st.session_state.page == 'welcome':
+        user = st.text_input("AGENT LOGIN:", placeholder="CODENAME")
+        if user:
+            st.session_state.current_user = user
+            st.success("ACCESS GRANTED")
             c1, c2, c3 = st.columns(3)
-            with c1:
-                done = progress['M1'] is not None
-                if st.button("MODE 1\nSTRESS", disabled=done):
-                    start_game(1)
-                    st.rerun()
-            with c2:
-                done = progress['M2'] is not None
-                if st.button("MODE 2\nIPA", disabled=done):
-                    start_game(2)
-                    st.rerun()
-            with c3:
-                done = progress['M3'] is not None
-                if st.button("MODE 3\nDECODE", disabled=done):
-                    start_game(3)
-                    st.rerun()
+            if c1.button("MODE 1\nSTRESS"): start_game(1); st.rerun()
+            if c2.button("MODE 2\nIPA"): start_game(2); st.rerun()
+            if c3.button("MODE 3\nDECODE"): start_game(3); st.rerun()
 
     elif st.session_state.page == 'playing':
-        # HUD Message
-        if st.session_state.message:
-            color = "#00eaff" if "✅" in st.session_state.message else "#ff0055"
-            st.markdown(f"<div style='text-align:center; color:{color}; font-weight:bold; font-size: 20px; margin-bottom:10px;'>{st.session_state.message}</div>", unsafe_allow_html=True)
+        # Nếu Armor về 0 -> Tự động thua câu này
+        if armor_pct == 0:
+            st.error("SHIELD BREACHED! TURN LOST.")
+            process_answer(False, "TIME OUT", 0)
+
+        # Xử lý Glitch (Nếu câu trước trả lời quá nhanh)
+        glitch_class = "glitch-mode" if st.session_state.glitch_active else ""
+        if st.session_state.glitch_active:
+             st.toast("⚠️ SPEED ANOMALY DETECTED! SYSTEM UNSTABLE!", icon="👾")
 
         if st.session_state.q_index < 10 and st.session_state.q_index < len(st.session_state.shuffled_keys):
             
-            # --- MODE 1 & 2 ---
+            # --- GAME LOGIC ---
             if st.session_state.game_mode in [1, 2]:
-                current_word = st.session_state.shuffled_keys[st.session_state.q_index]
-                correct_stress = word_data[current_word][0]
-                correct_ipa = word_data[current_word][1]
+                word = st.session_state.shuffled_keys[st.session_state.q_index]
+                correct_stress = word_data[word][0]
+                correct_ipa = word_data[word][1]
 
+                # Hiển thị từ vựng (Có thể bị Glitch làm mờ)
                 st.markdown(f"""
-                <div class="hud-display">
-                    <div style="font-size:12px; color:#ff0055; letter-spacing:2px;">TARGET LOCKED</div>
-                    <div class="hud-word">{current_word}</div>
+                <div class="hud-display {glitch_class}">
+                    <h1 style='margin:0; font-size:50px; color:#fff'>{word}</h1>
                 </div>
                 """, unsafe_allow_html=True)
 
                 if st.session_state.game_mode == 1:
-                    b1, b2, b3 = st.columns(3)
-                    with b1: 
-                        if st.button("STRESS [1]"): 
-                            process_answer(correct_stress == 1, correct_stress)
-                            st.rerun()
-                    with b2: 
-                        if st.button("STRESS [2]"): 
-                            process_answer(correct_stress == 2, correct_stress)
-                            st.rerun()
-                    with b3: 
-                        if st.button("STRESS [3]"): 
-                            process_answer(correct_stress == 3, correct_stress)
-                            st.rerun()
-
+                    c1, c2, c3 = st.columns(3)
+                    with c1: 
+                        if st.button("STRESS [1]"): process_answer(correct_stress==1, 1, armor_pct)
+                    with c2: 
+                        if st.button("STRESS [2]"): process_answer(correct_stress==2, 2, armor_pct)
+                    with c3: 
+                        if st.button("STRESS [3]"): process_answer(correct_stress==3, 3, armor_pct)
+                
                 elif st.session_state.game_mode == 2:
-                    # FIX BUG: Chỉ tạo đáp án nếu chưa có
+                    # Tạo đáp án thông minh 1 lần
                     if not st.session_state.get('current_options'):
-                        st.session_state.current_options = generate_robust_distractors(correct_ipa)
+                        st.session_state.current_options = strategic_distractors(correct_ipa)
                     
                     opts = st.session_state.current_options
                     
-                    r1_col1, r1_col2 = st.columns(2)
-                    r2_col1, r2_col2 = st.columns(2)
-                    
-                    with r1_col1:
-                        if st.button(opts[0]): 
-                            process_answer(opts[0] == correct_ipa, correct_ipa)
-                            st.rerun()
-                    with r1_col2:
-                        if st.button(opts[1]): 
-                            process_answer(opts[1] == correct_ipa, correct_ipa)
-                            st.rerun()
-                    with r2_col1:
-                        if st.button(opts[2]): 
-                            process_answer(opts[2] == correct_ipa, correct_ipa)
-                            st.rerun()
-                    with r2_col2:
-                        if st.button(opts[3]): 
-                            process_answer(opts[3] == correct_ipa, correct_ipa)
-                            st.rerun()
+                    # Nút bấm cũng bị Glitch nếu cần
+                    col_a, col_b = st.columns(2)
+                    for i, op in enumerate(opts):
+                        with (col_a if i%2==0 else col_b):
+                            # Nút bấm có hiệu ứng glitch class thông qua CSS
+                            if st.button(op): process_answer(op==correct_ipa, correct_ipa, armor_pct)
 
-            # --- MODE 3 ---
             elif st.session_state.game_mode == 3:
+                # Mode 3 logic (Giữ nguyên)
                 idx = st.session_state.shuffled_keys[st.session_state.q_index]
                 item = sentence_data[idx]
-                
-                st.markdown(f"""
-                <div class="hud-display" style="border-color:#00eaff">
-                    <div style="font-size:12px; color:#00eaff;">INCOMING SIGNAL</div>
-                    <div style="font-size:30px; font-family:'Courier New'; color:#fff;">{item['ipa']}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                inp = st.text_input("DECRYPT MESSAGE:", key=f"ans_{st.session_state.q_index}")
-                if st.button("SEND TRANSMISSION"):
-                    clean_u = inp.strip().lower().rstrip('.')
+                st.markdown(f"<div class='hud-display'><h3>{item['ipa']}</h3></div>", unsafe_allow_html=True)
+                ans = st.text_input("DECODE:")
+                if st.button("SUBMIT"):
+                    clean_u = ans.strip().lower().rstrip('.')
                     clean_t = item['text'].strip().lower().rstrip('.')
-                    process_answer(clean_u == clean_t, item['text'])
-                    st.rerun()
+                    process_answer(clean_u == clean_t, item['text'], armor_pct)
+
         else:
-            save_score(st.session_state.current_user, st.session_state.game_mode, st.session_state.score)
+            # End Game
+            st.session_state.user_db[st.session_state.current_user] = st.session_state.score
             st.session_state.page = 'result'
             st.rerun()
 
     elif st.session_state.page == 'result':
-        st.markdown(f"<h1 style='text-align:center; font-size:80px;'>{st.session_state.score}</h1>", unsafe_allow_html=True)
-        st.markdown("<h3 style='text-align:center;'>MISSION COMPLETE</h3>", unsafe_allow_html=True)
-        if st.button("RETURN TO BASE"):
-            st.session_state.page = 'welcome'
-            st.rerun()
+        st.markdown(f"<h1 style='text-align:center; font-size:80px'>{st.session_state.score}</h1>", unsafe_allow_html=True)
+        if st.button("MAIN MENU"): st.session_state.page = 'welcome'; st.rerun()
 
-# --- 3. RIGHT COLUMN: LOGS ---
-with right_col:
+# --- CỘT PHẢI: LOGS ---
+with right:
     st.markdown("### 📡 DATA LINK")
-    df = calculate_leaderboard()
-    if not df.empty:
-        st.dataframe(df, hide_index=True, use_container_width=True)
-    else:
-        st.caption("WAITING FOR DATA...")
-    
-    st.markdown("---")
-    st.caption("SYSTEM STATUS: ONLINE")
-    st.caption(f"CONNECTED: {st.session_state.current_user if st.session_state.current_user else 'GUEST'}")
+    if st.session_state.user_db:
+        df = pd.DataFrame(list(st.session_state.user_db.items()), columns=['AGENT', 'SCORE'])
+        st.dataframe(df.sort_values('SCORE', ascending=False), hide_index=True)
+    st.metric("CURRENT SCORE", st.session_state.score)
